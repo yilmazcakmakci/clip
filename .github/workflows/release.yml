@@ -38,6 +38,21 @@ jobs:
           git commit -m "Bump version to ${{ steps.version.outputs.number }}" || echo "No changes to commit"
           git push origin HEAD:refs/heads/${{ github.event.repository.default_branch }} || echo "Push skipped"
 
+      - name: Extract release notes from CHANGELOG
+        id: changelog
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${TAG#v}"
+          NOTES=$(awk "/^## Version ${VERSION}$/{ found=1; next } found && /^## /{ exit } found{ print }" CHANGELOG.md)
+          if [[ -z "$NOTES" ]]; then
+            NOTES="No release notes for ${TAG}."
+          fi
+          {
+            echo "notes<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and create DMG
         run: |
           chmod +x build.sh
@@ -53,8 +68,9 @@ jobs:
           name: clip ${{ steps.version.outputs.tag }}
           draft: false
           prerelease: false
-          generate_release_notes: true
           body: |
+            ${{ steps.changelog.outputs.notes }}
+
             ## Installation
 
             1. Download **clip-${{ steps.version.outputs.tag }}.dmg** below

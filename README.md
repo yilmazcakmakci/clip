@@ -56,7 +56,8 @@ Then right-click the app → **Open**.
 1. **Copy something** — clip automatically captures it in the background
 2. **Click the menu bar icon** — see your recent copies
 3. **Click an item** — it’s pasted into the frontmost app (or becomes the current clipboard for Cmd+V)
-4. **Adjust** — change history limit or clear history from the menu
+4. **Pin an item** — hold **⌥ Option** and click any item to pin/unpin it. Pinned items stay at the top and aren't removed by history limit or Clear History.
+5. **Adjust** — change history limit or clear history from the menu
 
 ## Building from Source
 
