@@ -12,6 +12,14 @@ struct ClipboardMenuView: View {
 
     private let previewLength = 50
 
+    private var pinnedItems: [ClipboardItem] {
+        store.history.filter { $0.isPinned }
+    }
+
+    private var unpinnedItems: [ClipboardItem] {
+        store.history.filter { !$0.isPinned }
+    }
+
     var body: some View {
         if store.history.isEmpty {
             Text("No copies yet")
@@ -20,16 +28,16 @@ struct ClipboardMenuView: View {
                 .padding(.horizontal, 16)
                 .frame(minWidth: 200)
         } else {
-            ForEach(Array(store.history.enumerated()), id: \.offset) { _, item in
-                Button {
-                    pasteItem(item)
-                } label: {
-                    Text(previewText(item))
-                        .lineLimit(2)
-                        .truncationMode(.tail)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            if !pinnedItems.isEmpty {
+                ForEach(pinnedItems) { item in
+                    itemButton(for: item)
                 }
-                .buttonStyle(.plain)
+
+                Divider()
+            }
+
+            ForEach(unpinnedItems) { item in
+                itemButton(for: item)
             }
         }
 
@@ -47,8 +55,28 @@ struct ClipboardMenuView: View {
 
         Divider()
 
+        Text("⌥ Click to pin/unpin")
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+
         Button("Quit clip") {
             NSApplication.shared.terminate(nil)
+        }
+    }
+
+    private func itemButton(for item: ClipboardItem) -> some View {
+        Button {
+            if NSEvent.modifierFlags.contains(.option) {
+                store.togglePin(for: item)
+            } else {
+                pasteItem(item.text)
+            }
+        } label: {
+            if item.isPinned {
+                Label(previewText(item.text), systemImage: "pin.fill")
+            } else {
+                Text(previewText(item.text))
+            }
         }
     }
 
@@ -65,3 +93,4 @@ struct ClipboardMenuView: View {
         PasteService.pasteToFrontmostApp()
     }
 }
+

@@ -12,8 +12,14 @@ import SwiftUI
 private let maxHistoryCountKey = "maxHistoryCount"
 private let defaultMaxHistoryCount = 20
 
+struct ClipboardItem: Identifiable, Equatable {
+    let id = UUID()
+    let text: String
+    var isPinned: Bool
+}
+
 final class ClipboardStore: ObservableObject {
-    @Published var history: [String] = []
+    @Published var history: [ClipboardItem] = []
     @Published var maxHistoryCount: Int
 
     private let pasteboard = NSPasteboard.general
@@ -45,21 +51,30 @@ final class ClipboardStore: ObservableObject {
         lastChangeCount = changeCount
 
         guard let string = pasteboard.string(forType: .string), !string.isEmpty else { return }
-        guard string != history.first else { return }
+        guard string != history.first?.text else { return }
 
         addToHistory(string)
     }
 
     private func addToHistory(_ text: String) {
-        history.removeAll { $0 == text }
-        history.insert(text, at: 0)
+        let isPinned = history.first(where: { $0.text == text })?.isPinned ?? false
+        history.removeAll { $0.text == text }
+
+        let newItem = ClipboardItem(text: text, isPinned: isPinned)
+        if newItem.isPinned {
+            history.insert(newItem, at: 0)
+        } else {
+            let insertIndex = history.prefix { $0.isPinned }.count
+            history.insert(newItem, at: insertIndex)
+        }
+
         trimHistoryIfNeeded()
     }
 
     private func trimHistoryIfNeeded() {
-        if history.count > maxHistoryCount {
-            history = Array(history.prefix(maxHistoryCount))
-        }
+        let pinnedItems = history.filter { $0.isPinned }
+        let unpinnedItems = history.filter { !$0.isPinned }
+        history = pinnedItems + Array(unpinnedItems.prefix(maxHistoryCount))
     }
 
     func copyToPasteboard(_ text: String) {
@@ -74,7 +89,23 @@ final class ClipboardStore: ObservableObject {
         trimHistoryIfNeeded()
     }
 
+    func togglePin(for item: ClipboardItem) {
+        guard let index = history.firstIndex(where: { $0.id == item.id }) else { return }
+
+        var updatedItem = history.remove(at: index)
+        updatedItem.isPinned.toggle()
+
+        if updatedItem.isPinned {
+            history.insert(updatedItem, at: 0)
+        } else {
+            let insertIndex = history.prefix { $0.isPinned }.count
+            history.insert(updatedItem, at: insertIndex)
+        }
+
+        trimHistoryIfNeeded()
+    }
+
     func clearHistory() {
-        history.removeAll()
+        history.removeAll { !$0.isPinned }
     }
 }

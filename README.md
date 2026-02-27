@@ -45,8 +45,9 @@ Then right-click the app → **Open**.
 | Feature | Description |
 |---------|-------------|
 | **Clipboard history** | Automatically saves the last 10, 20, or 50 copied text items |
+| **Pin important items** | Keep selected items pinned so they stay in your list |
 | **Click to paste** | Select an item from the menu — it pastes instantly into your active app |
-| **Adjustable limit** | Choose how many items to keep: 10, 20, or 50 |
+| **Adjustable limit** | Choose how many unpinned items to keep: 10, 20, or 50 |
 | **Clear history** | One-click to wipe all saved clips |
 | **Menu bar only** | No dock icon — stays out of the way |
 
